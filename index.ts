@@ -1,15 +1,9 @@
 import { parseDocument, DomUtils } from "htmlparser2";
-import type { searchItemLetterType, searchItemType } from "./schema.ts";
+import type { searchItemLetterType, searchItemType } from "./utils/schema.js";
 import type { BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
-import validate from "./schema.ts";
+import validate from "./utils/schema.js";
+import strings from "./utils/strings.js";
 
-const strings = {
-    errors: {
-        htmlParsingFailed: "HTML parsing failed",
-        jsonParsingFailed: "JSON validation failed",
-        expectedResponse: "Bandcamp returned a 404 when we were expecting a response"
-    }
-}
 
 export class Bandcamp {
     cookie: string;
