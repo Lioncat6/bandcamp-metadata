@@ -1,46 +1,36 @@
 import { parseDocument, DomUtils } from "htmlparser2";
-import type { searchItemLetterType, searchItemType } from "./utils/schema.js";
+import type { searchItemType } from "./utils/schema.js";
 import type { BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
 import validate from "./utils/schema.js";
 import strings from "./utils/strings.js";
+import parse from "./utils/parse.js";
+import type { BandcampConfig } from "./types/gloabl-types.js";
 
 
 export class Bandcamp {
     cookie: string;
     userAgent: string;
-    constructor(cookie: string, userAgent: string) {
-        this.cookie = cookie;
-        this.userAgent = userAgent;
+    strict: boolean;
+    constructor(config: BandcampConfig) {
+        this.cookie = config.cookie;
+        this.userAgent = config.userAgent;
+        this.strict = true;
     }
-    async search(query: string, page = 1, type?: searchItemType): BandcampSearchResults {
-        const types: Record<searchItemType, searchItemLetterType> = {
-            "album": "a",
-            "band": "b",
-            "track": "t",
-            "fan": "f"
-        }
+    /**
+     * Query the bandcamp search page
+     * @param query Query to lookup on bandcamp
+     * @param page Page number of the search to use
+     * @param type Type of search to run
+     * @returns BandcampSearchResults
+     */
+    async search(query: string, page = 1, type?: searchItemType): Promise<BandcampSearchResults> {
         const url = new URL("https://bandcamp.com/search")
-        url.searchParams.append('query', query)
+        url.searchParams.append('q', query)
         if (page > 1) url.searchParams.append('page', String(page))
-        if (type) url.searchParams.append('item_type', types[type])
+        if (type) url.searchParams.append('item_type', type)
         const html = await this.htmlFetch(url.toString());
-        if (!html) throw new Error(strings.errors.expectedResponse)
-        const results = DomUtils.getElementsByClassName('result-items', html)[0];
-        if (!results) throw new Error(strings.errors.htmlParsingFailed)
-        let parsedSearchResults: BandcampSearchResult[] = []
-        DomUtils.getChildren(results).forEach((result) => {
-            if (result.type == "tag" && result.tagName == "li") {
-                const rawSearchData = result.attribs['data-search'];
-                if (!rawSearchData) throw new Error(strings.errors.htmlParsingFailed);
-                const searchData = validate.searchData(rawSearchData);
-                if (!searchData) throw new Error(strings.errors.jsonParsingFailed);
-                const imageElement = DomUtils.getElementsByClassName('art', result)[0]?.firstChild
-                const imageUrl = imageElement?.type == "tag" ? result.attribs['src'] : undefined
-                if (searchData.type == "a") {
-
-                }
-            }
-        })
+        if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
+        return parse.searchHTML(html);
     }
     private async htmlFetch(url: string, method: string = "GET", body?: BodyInit){
         let options: RequestInit = {

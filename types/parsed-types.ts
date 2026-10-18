@@ -25,7 +25,7 @@ export interface AlbumSearchResult extends SearchResultBase {
     artist: string
     trackCount: number
     duration: number
-    releaseDate?: string
+    releaseDate: string
     imageUrl: string
 }
 
@@ -33,25 +33,27 @@ export interface TrackSearchResult extends SearchResultBase {
     type: "track"
     tags: string[]
     artist: string
-    album?: string
-    releaseDate?: string
+    album?: string | undefined
+    releaseDate: string
     imageUrl: string
 }
 
 export interface LabelSearchResult extends SearchResultBase {
-    type: "track"
+    type: "label"
     imageUrl: string
+    location: string
 }
 
 export interface FanSearchResult extends SearchResultBase {
     type: "fan"
     genre?: string
-    imageUrl?: string
+    imageUrl?: string | undefined
 }
 
 export type BandcampSearchResult =
-    | ArtistSearchResult
-    | AlbumSearchResult
-    | TrackSearchResult
-    | LabelSearchResult;
+    AlbumSearchResult |
+    ArtistSearchResult |
+    TrackSearchResult |
+    LabelSearchResult |
+    FanSearchResult;
 
