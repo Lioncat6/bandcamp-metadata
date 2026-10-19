@@ -1,10 +1,10 @@
 import { parseDocument, DomUtils } from "htmlparser2";
-import type { searchItemType } from "./utils/schema.js";
 import type { BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
 import validate from "./utils/schema.js";
 import strings from "./utils/strings.js";
 import parse from "./utils/parse.js";
-import type { BandcampConfig } from "./types/gloabl-types.js";
+import type { BandcampConfig } from "./types/global-types.js";
+import type { searchItemType } from "./types/bandcamp-types.js";
 
 
 export class Bandcamp {
@@ -32,6 +32,8 @@ export class Bandcamp {
         if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
         return parse.searchHTML(html);
     }
+
+    
     private async htmlFetch(url: string, method: string = "GET", body?: BodyInit){
         let options: RequestInit = {
             method: method,

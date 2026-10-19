@@ -2,29 +2,10 @@ import Ajv, { type JTDDataType, type JTDParser } from "ajv/dist/jtd.js"
 import type { JTDSchemaType } from "ajv/dist/core.js"
 import type { BandcampSearchResult } from "../types/parsed-types.js"
 import strings from "./strings.js"
+import type { searchItemDisplayType, searchItemType } from "../types/bandcamp-types.js"
 const ajv = new Ajv.Ajv({
     int32range: false
 })
-export type searchItemType = bandType | albumType | trackType | fanType
-
-/**
- * A band or label
- */
-type bandType = "b"
-/**
- * An album
- */
-type albumType = "a"
-/**
- * A track
- */
-type trackType = "t"
-/**
- * A fan
- */
-type fanType = "f"
-
-export type searchItemDisplayType = "label" | "artist" | "album" | "track" | "fan"
 
 export interface searchItemTypeInterface {
     type: searchItemDisplayType
