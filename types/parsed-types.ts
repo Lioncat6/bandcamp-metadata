@@ -1,3 +1,6 @@
+import type { searchItemDisplayType } from "./bandcamp-types.js"
+
+// Contains typing of data formatted on our side; After parsing, so should be "clean" data
 export interface BandcampSearchResults {
     results: BandcampSearchResult[]
     count: number
@@ -6,6 +9,7 @@ export interface BandcampSearchResults {
 }
 
 interface SearchResultBase {
+    type: searchItemDisplayType
     name: string
     url: string
     id: number
@@ -57,3 +61,13 @@ export type BandcampSearchResult =
     LabelSearchResult |
     FanSearchResult;
 
+
+export type bandPageTypes = "artist" | "label"
+
+export interface BandcampBandPage {
+    type: bandPageTypes
+    id: number
+    url: string
+    subdomain: string
+    
+}

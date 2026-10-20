@@ -1,5 +1,5 @@
 import { parseDocument, DomUtils } from "htmlparser2";
-import type { BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
+import type { BandcampBandPage, BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
 import validate from "./utils/schema.js";
 import strings from "./utils/strings.js";
 import parse from "./utils/parse.js";
@@ -11,9 +11,14 @@ export class Bandcamp {
     cookie: string;
     userAgent: string;
     strict: boolean;
+    /**
+     * Bandcamp API methods
+     */
+    api: API;
     constructor(config: BandcampConfig) {
         this.cookie = config.cookie;
         this.userAgent = config.userAgent;
+        this.api = new API(config)
         this.strict = true;
     }
     /**
@@ -32,9 +37,15 @@ export class Bandcamp {
         if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
         return parse.searchHTML(html);
     }
-
-    
-    private async htmlFetch(url: string, method: string = "GET", body?: BodyInit){
+    /**
+     * Fetch a label or artist page
+     * @param url 
+     * @returns BandcampBandPage
+     */
+    async getBand(url: string): Promise<BandcampBandPage> {
+        return {} as any;
+    }
+    private async htmlFetch(url: string, method: string = "GET", body?: BodyInit) {
         let options: RequestInit = {
             method: method,
             headers: {
@@ -53,5 +64,22 @@ export class Bandcamp {
         } else {
             throw new Error(`Fetch failed with status: ${response.status}`)
         }
+    }
+}
+class API {
+    cookie: string;
+    userAgent: string;
+    constructor(config: BandcampConfig) {
+        this.cookie = config.cookie;
+        this.userAgent = config.userAgent;
+    }
+    async search() {
+
+    }
+    async getBand() {
+
+    }
+    async getAlbum() {
+
     }
 }

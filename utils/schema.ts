@@ -2,18 +2,13 @@ import Ajv, { type JTDDataType, type JTDParser } from "ajv/dist/jtd.js"
 import type { JTDSchemaType } from "ajv/dist/core.js"
 import type { BandcampSearchResult } from "../types/parsed-types.js"
 import strings from "./strings.js"
-import type { searchItemDisplayType, searchItemType } from "../types/bandcamp-types.js"
+import type { searchData, searchItemDisplayType, searchItemType } from "../types/bandcamp-types.js"
 const ajv = new Ajv.Ajv({
     int32range: false
 })
 
 export interface searchItemTypeInterface {
     type: searchItemDisplayType
-}
-
-export interface searchData {
-    type: searchItemType
-    id: number
 }
 
 const searchDataSchema: JTDSchemaType<searchData> = {
