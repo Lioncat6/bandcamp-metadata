@@ -4,7 +4,7 @@ import validate from "./utils/schema.js";
 import strings from "./utils/strings.js";
 import parse from "./utils/parse.js";
 import type { BandcampConfig } from "./types/global-types.js";
-import type { searchItemType } from "./types/bandcamp-types.js";
+import type { searchItemType } from "./types/bandcamp/html-types.js";
 
 
 export class Bandcamp {
@@ -43,7 +43,8 @@ export class Bandcamp {
      * @returns BandcampBandPage
      */
     async getBand(url: string): Promise<BandcampBandPage> {
-        return {} as any;
+        const html = await this.htmlFetch(url);
+        if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
     }
     private async htmlFetch(url: string, method: string = "GET", body?: BodyInit) {
         let options: RequestInit = {

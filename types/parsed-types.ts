@@ -1,4 +1,4 @@
-import type { searchItemDisplayType } from "./bandcamp-types.js"
+import type { bandClientItems, bandData, searchItemDisplayType } from "./bandcamp/html-types.js"
 
 // Contains typing of data formatted on our side; After parsing, so should be "clean" data
 export interface BandcampSearchResults {
@@ -62,12 +62,51 @@ export type BandcampSearchResult =
     FanSearchResult;
 
 
+export interface BandcampImage {
+    id: number
+    url: string
+    bestUrl: string
+}
+
 export type bandPageTypes = "artist" | "label"
 
-export interface BandcampBandPage {
+export interface BandcampMiniRelease {
+    image: BandcampImage
+    artist: string
+    bandId: number
+    id: number
+    url: string
+    title: string
+    type: "album" | "track"
+}
+
+interface BandcampPageRoot {
     type: bandPageTypes
     id: number
     url: string
     subdomain: string
-    
+    /**
+     * Raw JSON from bandcamp HTML, subject to change when bandcamp feels like it
+     */
+    raw: {
+        data: bandData
+        /**
+         * Not present on all artist pages... for some reason.
+         * Will fall back to parsing HTML to populate releases.
+         */
+        items: bandClientItems | null
+    }
+    releases: BandcampMiniRelease[]
+    images: {
+        artist: BandcampImage
+        banner: BandcampImage | null
+        background: BandcampImage | null
+    }
 }
+
+interface BandcampLabelPage extends BandcampPageRoot {
+    type: "label"
+    artists: any
+}
+
+export type BandcampBandPage = BandcampPageRoot | BandcampLabelPage

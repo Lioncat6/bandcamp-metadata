@@ -1,6 +1,7 @@
 import { Document, Element, NodeWithChildren, type ChildNode } from "domhandler"
 import * as CSSselect from "css-select";
-import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult } from "../types/parsed-types.js";
+import * as he from 'he';
+import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease } from "../types/parsed-types.js";
 import validate from "./schema.js";
 import strings from "./strings.js";
 
@@ -160,10 +161,27 @@ function searchHTMLParser(html: Document): BandcampSearchResults {
     return resultData
 }
 
+function bandHTMLParser(html: Document): BandcampBandPage {
+    const dataScript = selectOne('script[data-band]', html);
+    if (!dataScript) {
+        throw new Error('Not implemented')
+    }
+    const bandData = expectJSON(validate.bandData(getAttr(dataScript, 'data-band')))
+    const itemsScript = selectOne('ol[data-client-items]', html)
+    // Whenever this is present, it's just HTML encoded for some stupid reason.
+    const itemsData = itemsScript ? validate.clientItems(he.decode(getAttr(itemsScript, 'data-client-items'))): null
+    let parsedItems: BandcampMiniRelease[];
+    if (itemsData) {
+        parsedItems = itemsData.map((item) => {
+            return {
+                type: item.type,
+                
+            }                
+        })
+    } else {
 
-
-
-
+    }
+}
 
 const parse = {
     searchHTML: searchHTMLParser

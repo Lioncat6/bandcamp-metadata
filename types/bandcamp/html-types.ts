@@ -1,4 +1,5 @@
 // Contains typing of data formatted on bandcamp's side
+// All JSON data obtained via scraping the site
 
 export type searchItemType = bandType | albumType | trackType | fanType
 
@@ -36,7 +37,7 @@ export interface emptyBandData {
 }
 
 /**
- * Found with selector script[band-data]
+ * Found with selector script[data-band]
  * It's a monotype because I said so.
  * Should be regenerated using something like https://transform.tools/json-to-typescript if bandcamp changes something.
  * `any` should be replaced with x | null or unknown.
@@ -174,5 +175,5 @@ export interface bandClientItem {
   id: number
   page_url: string
   title: string
-  type: string
+  type: "album" | "track"
 }
