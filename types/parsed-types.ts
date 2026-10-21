@@ -1,4 +1,4 @@
-import type { bandClientItems, bandData, searchItemDisplayType } from "./bandcamp/html-types.js"
+import type { bandClientItems, bandData, labelArtistsSelectorPanelData, searchItemDisplayType } from "./bandcamp/html-types.js"
 
 // Contains typing of data formatted on our side; After parsing, so should be "clean" data
 export interface BandcampSearchResults {
@@ -80,22 +80,25 @@ export interface BandcampMiniRelease {
     type: "album" | "track"
 }
 
+interface BandcampPageRaw {
+    data: bandData
+    /**
+     * Not present on all artist pages... for some reason.
+     * Will fall back to parsing HTML to populate releases.
+     */
+    items: bandClientItems | null
+}
+
 interface BandcampPageRoot {
     type: bandPageTypes
     id: number
+    name: string
     url: string
     subdomain: string
     /**
      * Raw JSON from bandcamp HTML, subject to change when bandcamp feels like it
      */
-    raw: {
-        data: bandData
-        /**
-         * Not present on all artist pages... for some reason.
-         * Will fall back to parsing HTML to populate releases.
-         */
-        items: bandClientItems | null
-    }
+    raw: BandcampPageRaw
     releases: BandcampMiniRelease[]
     images: {
         artist: BandcampImage | null
@@ -104,9 +107,28 @@ interface BandcampPageRoot {
     }
 }
 
+interface BandcampLabelPageRaw extends BandcampPageRaw {
+    /**
+     * It seems labels can disable the artist selector on the discography tab, which removes this
+     */
+    artists: labelArtistsSelectorPanelData | null
+}
+
 interface BandcampLabelPage extends BandcampPageRoot {
     type: "label"
-    artists: any
+    /**
+     * It seems labels can disable the artist selector on the discography tab, which removes this 
+     */
+    artists: BandcampMiniArtists | null
+    raw: BandcampLabelPageRaw
 }
 
 export type BandcampBandPage = BandcampPageRoot | BandcampLabelPage
+
+export type BandcampMiniArtists = BandcampMiniArtist[]
+
+export interface BandcampMiniArtist {
+    id: number
+    name: string
+    image: BandcampImage
+}

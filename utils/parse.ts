@@ -1,7 +1,7 @@
 import { Document, Element, NodeWithChildren, type ChildNode } from "domhandler"
 import * as CSSselect from "css-select";
 import * as he from 'he';
-import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease } from "../types/parsed-types.js";
+import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease, BandcampMiniArtist } from "../types/parsed-types.js";
 import validate from "./schema.js";
 import strings from "./strings.js";
 import image from "./image.js";
@@ -227,6 +227,7 @@ function bandHTMLParser(html: Document): BandcampBandPage {
     let bandPage: BandcampBandPage = {
         type: bandType,
         id: bandData.id,
+        name: bandData.name,
         url: bandData.url,
         subdomain: bandData.subdomain,
         raw: {
@@ -235,15 +236,28 @@ function bandHTMLParser(html: Document): BandcampBandPage {
         },
         images: {
             artist: imageUrl ? image.getImage({ idOrUrl: imageUrl, isId: false }) : null,
-            banner: bannerImageId ? image.getImage({ idOrUrl: bannerImageId, isId: true}) : null,
-            background: backgroundImageId ? image.getImage({ idOrUrl: backgroundImageId, isId: true}) : null,
+            banner: bannerImageId ? image.getImage({ idOrUrl: bannerImageId, isId: true }) : null,
+            background: backgroundImageId ? image.getImage({ idOrUrl: backgroundImageId, isId: true }) : null,
         },
         releases: parsedItems
     }
     if (bandPage.type == "label") {
+        const artistsSelectorPanel = selectOne('.label-band-selector-container[data-label-band-selector]', html);
+        const artists = artistsSelectorPanel ? validate.artistsSelectorPanel(getAttr(artistsSelectorPanel, 'data-label-band-selector')) : null;
+        const miniArtists: BandcampMiniArtist[] | null = artists ? artists.member_bands.map((band) => {
+            return {
+                id: band.id,
+                name: band.name,
+                image: image.getImage({ idOrUrl: band.photo, isId: true })
+            }
+        }) : null
         return {
             ...bandPage,
-            artists: null
+            artists: miniArtists,
+            raw: {
+                ...bandPage.raw,
+                artists
+            }
         }
     } else {
         return bandPage;

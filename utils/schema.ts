@@ -2,7 +2,7 @@ import Ajv, { type JTDDataType, type JTDParser } from "ajv/dist/jtd.js"
 import type { JTDSchemaType } from "ajv/dist/core.js"
 import type { BandcampSearchResult } from "../types/parsed-types.js"
 import strings from "./strings.js"
-import type { bandClientItems, bandData, searchData, searchItemDisplayType, searchItemType } from "../types/bandcamp/html-types.js"
+import type { bandClientItems, bandData, labelArtistsSelectorPanelData, searchData, searchItemDisplayType, searchItemType } from "../types/bandcamp/html-types.js"
 const ajv = new Ajv.Ajv({
     int32range: false
 })
@@ -278,6 +278,29 @@ const clientItemsSchema: JTDSchemaType<bandClientItems> = {
 
 const clientItemsParser = ajv.compileParser(clientItemsSchema)
 
+const labelArtistsSelectorPanelSchema: JTDSchemaType<labelArtistsSelectorPanelData> = {
+    properties: {
+        member_bands: {
+            elements: {
+                properties: {
+                    id: { type: 'uint32' },
+                    name: { type: 'string' },
+                    photo: { type: 'uint32' }
+                }
+            }
+        },
+        label_band: {
+            properties: {
+                id: { type: 'uint32' },
+                name: { type: 'string' }
+            }
+        },
+        label_has_own_items: { type: 'boolean' }
+    }
+}
+
+const labelArtistsSelectorPanelParser = ajv.compileParser(labelArtistsSelectorPanelSchema);
+
 type validationTypes = string
 
 function validateJSON<T>(json: validationTypes, parser: JTDParser<T>): T {
@@ -294,6 +317,7 @@ const validate = {
     searchType: (json: validationTypes) => validateJSON(json, searchTypeParser),
     bandData: (json: validationTypes) => validateJSON(json, bandDataParser),
     clientItems: (json: validationTypes) => validateJSON(json, clientItemsParser),
+    artistsSelectorPanel: (json: validationTypes) => validateJSON(json, labelArtistsSelectorPanelParser),
 }
 
 export default validate;

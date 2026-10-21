@@ -169,11 +169,29 @@ export interface bandData {
 export type bandClientItems = bandClientItem[]
 
 export interface bandClientItem {
-  art_id: number
-  artist?: string
-  band_id: number
-  id: number
-  page_url: string
-  title: string
-  type: "album" | "track"
+    art_id: number
+    artist?: string
+    band_id: number
+    id: number
+    page_url: string
+    title: string
+    type: "album" | "track"
+}
+
+/**
+ * Artist selector panel data. Not very useful, but contains name, ID, & photo ID
+ * .label-band-selector-container[data-label-band-selector]
+ */
+
+export interface labelArtistsSelectorPanelData {
+    member_bands: Array<{
+        id: number
+        name: string
+        photo: number
+    }>
+    label_band: {
+        id: number
+        name: string
+    }
+    label_has_own_items: boolean
 }
