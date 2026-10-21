@@ -98,7 +98,7 @@ interface BandcampPageRoot {
     }
     releases: BandcampMiniRelease[]
     images: {
-        artist: BandcampImage
+        artist: BandcampImage | null
         banner: BandcampImage | null
         background: BandcampImage | null
     }

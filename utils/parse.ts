@@ -4,6 +4,8 @@ import * as he from 'he';
 import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease } from "../types/parsed-types.js";
 import validate from "./schema.js";
 import strings from "./strings.js";
+import image from "./image.js";
+import { DomUtils } from "htmlparser2";
 
 function getAttr(element: Element, attr: string): string {
     const attribute = element.attribs[attr];
@@ -27,19 +29,20 @@ function expectElement(element: Element | undefined | null): Element {
     return element;
 }
 
+
 function expectJSON<T>(data: T | undefined | null): T {
     if (!data) throw new Error(strings.errors.jsonParsingFailed.generic);
     return data;
 }
 
 function expectValue<T>(data: T | undefined | null, value?: string): T {
-    if (!data) throw new Error(value ? strings.errors.expectedValue(value): strings.errors.expected);
+    if (!data) throw new Error(value ? strings.errors.expectedValue(value) : strings.errors.expected);
     return data;
 }
 
 function expectNumber(data: any, value?: string): number {
     const number = Number(data);
-    if (isNaN(number)) throw new Error(value ? strings.errors.expectedNumberValue(value): strings.errors.expectedNumber)
+    if (isNaN(number)) throw new Error(value ? strings.errors.expectedNumberValue(value) : strings.errors.expectedNumber)
     return number;
 }
 
@@ -57,6 +60,12 @@ function expectOne(query: string, elements: NodeWithChildren | NodeWithChildren[
     return element;
 }
 
+function expectAtLeastOne(query: string, elements: NodeWithChildren | NodeWithChildren[]) {
+    const element = selectAll(query, elements)
+    if (element.length == 0) throw new Error(strings.errors.htmlParsingFailed.expectedWithQuery(query))
+    return element;
+}
+
 function searchHTMLParser(html: Document): BandcampSearchResults {
     let searchResults: BandcampSearchResult[] = []
     const results = selectAll('.result-items li', html)
@@ -64,7 +73,7 @@ function searchHTMLParser(html: Document): BandcampSearchResults {
         const searchData = expectJSON(validate.searchData(getAttr(result, 'data-search')));
         // Required
         const itemtype = expectValue(innerText(expectOne('.itemtype', result)).match(/([^\s]+)/)?.[1], "type")
-        const safeType = expectValue(validate.searchType(JSON.stringify({type: itemtype.toLowerCase()})), "type");
+        const safeType = expectValue(validate.searchType(JSON.stringify({ type: itemtype.toLowerCase() })), "type");
         const name = innerText(expectOne('.heading a', result)).trim();
         const itemurl = getAttr(expectOne('.itemurl a', result), 'href')
         const cleanURL = itemurl.match(/^[^?#]+/)?.[0] ?? itemurl;
@@ -83,7 +92,7 @@ function searchHTMLParser(html: Document): BandcampSearchResults {
         }
 
         switch (safeType.type) {
-            case "artist": 
+            case "artist":
                 const artistResult: ArtistSearchResult = {
                     type: "artist",
                     id: searchData.id,
@@ -149,9 +158,9 @@ function searchHTMLParser(html: Document): BandcampSearchResults {
         }
     })
     const pager = selectOne('.pager', html)
-    const hasNext = pager ? !!selectOne('.nextprev.next', pager): false;
-    const lastCount = pager ? selectOne('.pagelist li:last-child a', pager): undefined;
-    const pageCount = lastCount ? innerText(lastCount): 1
+    const hasNext = pager ? !!selectOne('.nextprev.next', pager) : false;
+    const lastCount = pager ? selectOne('.pagelist li:last-child a', pager) : undefined;
+    const pageCount = lastCount ? innerText(lastCount) : 1
     const resultData: BandcampSearchResults = {
         results: searchResults,
         count: searchResults.length,
@@ -169,22 +178,81 @@ function bandHTMLParser(html: Document): BandcampBandPage {
     const bandData = expectJSON(validate.bandData(getAttr(dataScript, 'data-band')))
     const itemsScript = selectOne('ol[data-client-items]', html)
     // Whenever this is present, it's just HTML encoded for some stupid reason.
-    const itemsData = itemsScript ? validate.clientItems(he.decode(getAttr(itemsScript, 'data-client-items'))): null
-    let parsedItems: BandcampMiniRelease[];
+    const itemsData = itemsScript ? validate.clientItems(he.decode(getAttr(itemsScript, 'data-client-items'))) : null
+    let parsedItems: BandcampMiniRelease[] = [];
     if (itemsData) {
         parsedItems = itemsData.map((item) => {
+            const cleanURL = expectValue(item.page_url.match(/([^?#]+)/)?.[1], 'release url')
             return {
                 type: item.type,
-                
-            }                
+                image: image.getImage({ idOrUrl: item.art_id, isId: true, a: true }),
+                title: item.title,
+                artist: item.artist ?? bandData.name,
+                id: item.id,
+                bandId: item.band_id,
+                url: cleanURL,
+            }
         })
     } else {
-
+        const items = selectAll('li.music-grid-item', html);
+        items.forEach((item) => {
+            const idMatch = getAttr(item, 'data-item-id').match(/(album|track)-(\d+)/);
+            const id = expectNumber(expectValue(idMatch?.[2], 'release id'), 'release id')
+            const type = expectValue(idMatch?.[1], 'release type') == "album" ? 'album' : 'track'
+            const bandId = expectNumber(getAttr(item, 'data-band-id'), 'band id')
+            const rawUrl = getAttr(expectOne('a[href]', item), 'href');
+            const partialMatch = rawUrl.match(/^\/(album|track)\/([^?#\/]+)/);
+            const fullMatch = rawUrl.match(/(https?:\/\/[^\/]+\/(?:album|track)\/[^#?\/]+)/);
+            const url = expectValue(partialMatch ? `${bandData.local_url}${rawUrl}` : fullMatch?.[1], 'release url')
+            const imageUrl = getAttr(expectOne('.art img', item), 'src');
+            const title = innerText(expectOne('.title', item)).trim();
+            const artist = innerTextOpt(selectOne('.title .artist-override', item))?.trim() ?? bandData.name;
+            const release: BandcampMiniRelease = {
+                type,
+                image: image.getImage({ idOrUrl: imageUrl, isId: false, a: true }),
+                title,
+                artist,
+                id,
+                bandId,
+                url
+            }
+            parsedItems.push(release);
+        })
+    }
+    const bandType = bandData.is_label ? "label" : "artist"
+    const artistImage = selectOne('.band-photo', html);
+    const imageUrl = artistImage ? getAttr(artistImage, 'src') : null;
+    const bannerImageId = bandData.header_desktop?.image_id;
+    const backgroundImageId = bandData.design.bg_image_id;
+    let bandPage: BandcampBandPage = {
+        type: bandType,
+        id: bandData.id,
+        url: bandData.url,
+        subdomain: bandData.subdomain,
+        raw: {
+            data: bandData,
+            items: itemsData
+        },
+        images: {
+            artist: imageUrl ? image.getImage({ idOrUrl: imageUrl, isId: false }) : null,
+            banner: bannerImageId ? image.getImage({ idOrUrl: bannerImageId, isId: true}) : null,
+            background: backgroundImageId ? image.getImage({ idOrUrl: backgroundImageId, isId: true}) : null,
+        },
+        releases: parsedItems
+    }
+    if (bandPage.type == "label") {
+        return {
+            ...bandPage,
+            artists: null
+        }
+    } else {
+        return bandPage;
     }
 }
 
 const parse = {
-    searchHTML: searchHTMLParser
+    searchHTML: searchHTMLParser,
+    bandHTML: bandHTMLParser
 }
 
 export default parse;

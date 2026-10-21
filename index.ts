@@ -45,6 +45,7 @@ export class Bandcamp {
     async getBand(url: string): Promise<BandcampBandPage> {
         const html = await this.htmlFetch(url);
         if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
+        return parse.bandHTML(html);
     }
     private async htmlFetch(url: string, method: string = "GET", body?: BodyInit) {
         let options: RequestInit = {

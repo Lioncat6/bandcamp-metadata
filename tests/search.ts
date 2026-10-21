@@ -8,5 +8,3 @@ let bcApi = new Bandcamp({
 const results = await bcApi.search('jamie paige', 1)
 
 console.log(JSON.stringify(results))
-
-bcApi.api
