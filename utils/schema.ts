@@ -2,7 +2,7 @@ import Ajv, { type JTDDataType, type JTDParser } from "ajv/dist/jtd.js"
 import type { JTDSchemaType } from "ajv/dist/core.js"
 import type { BandcampSearchResult } from "../types/parsed-types.js"
 import strings from "./strings.js"
-import type { bandClientItems, bandData, labelArtistsSelectorPanelData, searchData, searchItemDisplayType, searchItemType } from "../types/bandcamp/html-types.js"
+import type { BandcampReleasePageData, bandClientItems, bandData, emptyBandData, labelArtistsSelectorPanelData, searchData, searchItemDisplayType, searchItemType } from "../types/bandcamp/html-types.js"
 const ajv = new Ajv.Ajv({
     int32range: false
 })
@@ -301,23 +301,49 @@ const labelArtistsSelectorPanelSchema: JTDSchemaType<labelArtistsSelectorPanelDa
 
 const labelArtistsSelectorPanelParser = ajv.compileParser(labelArtistsSelectorPanelSchema);
 
+const emptyBandDataSchema: JTDSchemaType<emptyBandData> = {
+    properties: {
+        id: { type: 'uint32' },
+        name: { type: 'string' }
+    }
+}
+
+const emptyBandDataParser = ajv.compileParser(emptyBandDataSchema);
+
+const releasePageDataSchema: JTDSchemaType<BandcampReleasePageData> = {
+    discriminator: "item_type",
+    mapping: {
+        "album" : {
+            properties: {
+                "for the curious": string,
+                current: {
+                    mapping: {}
+                },
+                
+            }
+        }
+    }
+}
+
+
 type validationTypes = string
 
-function validateJSON<T>(json: validationTypes, parser: JTDParser<T>): T {
+function validateJSON<T>(json: validationTypes, expect = true, parser: JTDParser<T>): T | undefined {
     const data = parser(json);
-    if (data === undefined) {
+    if (expect && data === undefined) {
         throw new Error(strings.errors.jsonParsingFailed.withError(parser.message ?? "unknown error", parser.position ?? "unknown position"))
     }
     return data;
 }
 
 const validate = {
-    searchData: (json: validationTypes) => validateJSON(json, searchDataParser),
+    searchData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, searchDataParser),
     searchResult: searchResultParser,
-    searchType: (json: validationTypes) => validateJSON(json, searchTypeParser),
-    bandData: (json: validationTypes) => validateJSON(json, bandDataParser),
-    clientItems: (json: validationTypes) => validateJSON(json, clientItemsParser),
-    artistsSelectorPanel: (json: validationTypes) => validateJSON(json, labelArtistsSelectorPanelParser),
+    searchType: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, searchTypeParser),
+    bandData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, bandDataParser),
+    clientItems: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, clientItemsParser),
+    artistsSelectorPanel: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, labelArtistsSelectorPanelParser),
+    emptyBandData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, emptyBandDataParser),
 }
 
 export default validate;

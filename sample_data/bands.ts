@@ -1,0 +1,8 @@
+const bands = {
+    artists: [
+
+    ],
+    labels: [
+        
+    ]
+}

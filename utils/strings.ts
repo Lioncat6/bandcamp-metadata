@@ -9,7 +9,8 @@ const strings = {
         },
         jsonParsingFailed: {
             generic: "JSON validation failed",
-            withError: (message: string, position: string | number) => `JSON validation failed at index ${position}: ${message}`
+            withError: (message: string, position: string | number) => `JSON validation failed at index ${position}: ${message}`,
+            expectedWithText: (message: string) => `Valid JSON was expected: ${message}`
         },
         expected: "Expected value to be defined",
         expectedValue: (value: string) => `Expected ${value} to be defined`,

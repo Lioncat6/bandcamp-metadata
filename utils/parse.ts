@@ -1,7 +1,7 @@
 import { Document, Element, NodeWithChildren, type ChildNode } from "domhandler"
 import * as CSSselect from "css-select";
 import * as he from 'he';
-import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease, BandcampMiniArtist } from "../types/parsed-types.js";
+import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease, BandcampMiniArtist, BandcampArtistPage, BandcampShow } from "../types/parsed-types.js";
 import validate from "./schema.js";
 import strings from "./strings.js";
 import image from "./image.js";
@@ -20,7 +20,7 @@ function innerText(element: Element): string {
 }
 
 function innerTextOpt(element: Element | null): string | null {
-    if (!element) return null;
+    if (!element || element.firstChild?.type != "text") return null;
     return innerText(element)
 }
 
@@ -170,15 +170,60 @@ function searchHTMLParser(html: Document): BandcampSearchResults {
     return resultData
 }
 
-function bandHTMLParser(html: Document): BandcampBandPage {
-    const dataScript = selectOne('script[data-band]', html);
-    if (!dataScript) {
-        throw new Error('Not implemented')
+function processBio(bio: Element | null): string | null {
+    if (!bio) return null;
+    let bioArray: string[] = [];
+    let bioChildren: ChildNode[] = bio.childNodes;
+    const hiddenBio = selectOne('.peekaboo-text', bio);
+    if (hiddenBio) bioChildren = bioChildren.concat(hiddenBio.childNodes);
+    bioChildren.forEach(child => {
+        if (child.type == "text") {
+            bioArray.push(child.data)
+        } else if (child.type == "tag" && child.tagName == "br") {
+            bioArray.push('\n')// Just a newline
+        }
+    })
+    return bioArray.join('');
+}
+
+function mapShow(show: Element): BandcampShow {
+    return {
+        date: innerText(expectOne('.showDate', show)),
+        venue: innerText(expectOne('.showVenue a', show)),
+        url: getAttr(expectOne('.showVenue a', show), 'href'),
+        location: innerText(expectOne('.showLoc', show))
     }
-    const bandData = expectJSON(validate.bandData(getAttr(dataScript, 'data-band')))
+}
+
+function bandHTMLParser(html: Document): BandcampBandPage {
+    const dataScript = expectOne('script[data-band]', html);
+    const bandData = validate.bandData(getAttr(dataScript, 'data-band'), false)
+    if (!bandData) {
+        const emptyBandData = validate.emptyBandData(getAttr(dataScript, 'data-band'))
+        if (emptyBandData) {
+            const stubPage = expectOne('.stub-page-content', html);
+            const imageElement = expectOne('.bio-pic', stubPage);
+            const imageUrl = imageElement.attribs['src'] ?? null;
+            const location = innerTextOpt(expectOne('h4', stubPage));
+            const bioElement = selectOne('p:not(.follow-text)', stubPage);
+            const bio = bioElement?.type == "tag" ? innerTextOpt(bioElement) : null
+            return {
+                type: "stub",
+                id: emptyBandData.id,
+                name: emptyBandData.name,
+                location,
+                bio,
+                images: {
+                    artist: imageUrl ? image.getImage({ idOrUrl: imageUrl, isId: false }) : null
+                }
+            }
+        } else {
+            throw new Error(strings.errors.jsonParsingFailed.expectedWithText('valid band-data could not be found'))
+        }
+    }
     const itemsScript = selectOne('ol[data-client-items]', html)
     // Whenever this is present, it's just HTML encoded for some stupid reason.
-    const itemsData = itemsScript ? validate.clientItems(he.decode(getAttr(itemsScript, 'data-client-items'))) : null
+    const itemsData = itemsScript ? expectJSON(validate.clientItems(he.decode(getAttr(itemsScript, 'data-client-items')))) : null
     let parsedItems: BandcampMiniRelease[] = [];
     if (itemsData) {
         parsedItems = itemsData.map((item) => {
@@ -222,13 +267,19 @@ function bandHTMLParser(html: Document): BandcampBandPage {
     const bandType = bandData.is_label ? "label" : "artist"
     const artistImage = selectOne('.band-photo', html);
     const imageUrl = artistImage ? getAttr(artistImage, 'src') : null;
+    const location = innerTextOpt(expectOne('.location', html))?.trim() ?? null;
+    const bioElement = selectOne('#bio-text', html);
     const bannerImageId = bandData.header_desktop?.image_id;
     const backgroundImageId = bandData.design.bg_image_id;
-    let bandPage: BandcampBandPage = {
-        type: bandType,
+    // Showography is a great word
+    const showElements = selectAll('#showography ul li', html);
+    let bandPage: BandcampArtistPage = {
+        type: "artist",
         id: bandData.id,
         name: bandData.name,
         url: bandData.url,
+        location,
+        bio: processBio(bioElement),
         subdomain: bandData.subdomain,
         raw: {
             data: bandData,
@@ -239,9 +290,10 @@ function bandHTMLParser(html: Document): BandcampBandPage {
             banner: bannerImageId ? image.getImage({ idOrUrl: bannerImageId, isId: true }) : null,
             background: backgroundImageId ? image.getImage({ idOrUrl: backgroundImageId, isId: true }) : null,
         },
-        releases: parsedItems
+        releases: parsedItems,
+        shows: showElements.length > 0 ? showElements.map(mapShow) : null
     }
-    if (bandPage.type == "label") {
+    if (bandType == "label") {
         const artistsSelectorPanel = selectOne('.label-band-selector-container[data-label-band-selector]', html);
         const artists = artistsSelectorPanel ? validate.artistsSelectorPanel(getAttr(artistsSelectorPanel, 'data-label-band-selector')) : null;
         const miniArtists: BandcampMiniArtist[] | null = artists ? artists.member_bands.map((band) => {
@@ -252,11 +304,15 @@ function bandHTMLParser(html: Document): BandcampBandPage {
             }
         }) : null
         return {
+            // Yes, I know that this adds the 'shows' property from ArtistPage,
+            // but like, it's still typed correctly and I honestly don't know
+            // if labels can have shows or not, and I'm not paying 20$ to find out
             ...bandPage,
+            type: "label",
             artists: miniArtists,
             raw: {
                 ...bandPage.raw,
-                artists
+                artists: artists ?? null
             }
         }
     } else {

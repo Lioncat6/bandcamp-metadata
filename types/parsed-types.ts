@@ -68,7 +68,7 @@ export interface BandcampImage {
     bestUrl: string
 }
 
-export type bandPageTypes = "artist" | "label"
+export type bandPageTypes = "artist" | "label" | "stub"
 
 export interface BandcampMiniRelease {
     image: BandcampImage
@@ -89,10 +89,23 @@ interface BandcampPageRaw {
     items: bandClientItems | null
 }
 
-interface BandcampPageRoot {
+interface BandcampBasePage {
     type: bandPageTypes
     id: number
     name: string
+    images: {
+        artist: BandcampImage | null
+    }
+    location: string | null
+    bio: string | null
+}
+
+interface BandcampStubPage extends BandcampBasePage {
+    type: "stub"
+}
+
+interface BandcampFullPageRoot extends BandcampBasePage {
+    type: "artist" | "label"
     url: string
     subdomain: string
     /**
@@ -107,6 +120,11 @@ interface BandcampPageRoot {
     }
 }
 
+export interface BandcampArtistPage extends BandcampFullPageRoot {
+    type: "artist"
+    shows: BandcampShow[] | null
+}
+
 interface BandcampLabelPageRaw extends BandcampPageRaw {
     /**
      * It seems labels can disable the artist selector on the discography tab, which removes this
@@ -114,7 +132,7 @@ interface BandcampLabelPageRaw extends BandcampPageRaw {
     artists: labelArtistsSelectorPanelData | null
 }
 
-interface BandcampLabelPage extends BandcampPageRoot {
+interface BandcampLabelPage extends BandcampFullPageRoot {
     type: "label"
     /**
      * It seems labels can disable the artist selector on the discography tab, which removes this 
@@ -123,7 +141,7 @@ interface BandcampLabelPage extends BandcampPageRoot {
     raw: BandcampLabelPageRaw
 }
 
-export type BandcampBandPage = BandcampPageRoot | BandcampLabelPage
+export type BandcampBandPage = BandcampArtistPage | BandcampLabelPage | BandcampStubPage
 
 export type BandcampMiniArtists = BandcampMiniArtist[]
 
@@ -131,4 +149,24 @@ export interface BandcampMiniArtist {
     id: number
     name: string
     image: BandcampImage
+}
+
+export interface BandcampShow {
+    date: string
+    venue: string
+    url: string
+    location: string
+}
+
+export interface BandcampReleasePageRoot {
+    name: string
+    id: number
+    image: BandcampImage
+    artist: string
+    releaseDate: string
+    publishDate: string
+    modifyDate: string
+    raw: {
+        tralbum: null
+    }
 }

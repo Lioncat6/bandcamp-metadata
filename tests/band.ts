@@ -5,7 +5,7 @@ let bcApi = new Bandcamp({
     userAgent: 'Firefox/ (Test client) https://github.com/Lioncat6/bandcamp-metadata'
 })
 
-const results = await bcApi.getBand('https://creaturecore.bandcamp.com/music')
+const results = await bcApi.getBand('https://ivycomb.bandcamp.com/rawr')
 
 // fs.writeFile('./bandout.json', JSON.stringify(results), () => {})
 

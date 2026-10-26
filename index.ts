@@ -39,13 +39,21 @@ export class Bandcamp {
     }
     /**
      * Fetch a label or artist page
-     * @param url 
+     * @param url The band's url.
      * @returns BandcampBandPage
      */
     async getBand(url: string): Promise<BandcampBandPage> {
-        const html = await this.htmlFetch(url);
+        let urlObj = new URL(url);
+        urlObj.pathname = '/music'
+        const html = await this.htmlFetch(urlObj.toString());
         if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
         return parse.bandHTML(html);
+    }
+    async getRelease(url: string): Promise<BandcampReleasePage> {
+        let urlObj = new URL(url);
+        const html = await this.htmlFetch(urlObj.toString());
+        if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
+        return parse.releaseHTML(html);
     }
     private async htmlFetch(url: string, method: string = "GET", body?: BodyInit) {
         let options: RequestInit = {
