@@ -206,7 +206,10 @@ type releasePageTypes = "album" | "track";
 export interface ReleasePageDataRoot {
     item_type: releasePageTypes;
     "for the curious": string;
-    preorder_count: null;
+    /**
+     * Always null in testing
+     */
+    preorder_count: number | null;
     hasAudio: boolean;
     art_id: number;
     packages: Package[] | null;
@@ -216,16 +219,28 @@ export interface ReleasePageDataRoot {
     PAID: number;
     artist: string;
     id: number;
+    /**
+     * Always null in testing
+     */
     last_subscription_item: null;
     has_discounts: boolean;
     is_bonus: boolean | null;
     play_cap_data: PlayCapData | null;
     is_purchased: boolean;
     items_purchased: ItemsPurchased;
-    is_private_stream: null;
-    is_band_member: null;
+    /**
+     * Always null in testing
+     */
+    is_private_stream: boolean | null;
+    /**
+     * Always null in testing
+     */
+    is_band_member: boolean | null;
     licensed_version_ids: number[] | null;
-    package_associated_license_id: null;
+    /**
+     * Always null in testing
+     */
+    package_associated_license_id: number | null;
     has_video: boolean | null;
     tralbum_subscriber_only: boolean;
     album_is_preorder: boolean;
@@ -305,12 +320,9 @@ export interface CurrentTrack extends CurrentRoot {
 }
 
 export interface ItemsPurchased {
-    packages: Bundles;
-    bundles: Bundles;
-    crowdfunding_campaign: Bundles;
-}
-
-export interface Bundles {
+    packages: {};
+    bundles: {};
+    crowdfunding_campaign: {};
 }
 
 export interface Package {
@@ -325,18 +337,30 @@ export interface Package {
     desc_pt2: null | string;
     new_desc_format: number;
     grid_index: number | null;
-    private: null;
-    subscriber_only: null;
+    /**
+     * Always null in testing
+     */
+    private: boolean | null;
+    /**
+     * Always null in testing
+     */
+    subscriber_only: boolean | null;
     price: number;
     is_set_price: number | null;
     is_live_ticket: number | null;
-    live_event_over: null;
+    /**
+     * Always null in testing
+     */
+    live_event_over: boolean | null;
     live_event_id: number | null;
     live_event_title: null | string;
     live_event_url: null | string;
     live_event_gcal_url: null | string;
     live_event_ical_url: null | string;
-    live_event_replays_enabled: null;
+    /**
+     * Always null in testing
+     */
+    live_event_replays_enabled: boolean | null;
     live_event_image_color_one: null | string;
     live_event_image_color_two: null | string;
     sku: string;
@@ -345,8 +369,14 @@ export interface Package {
     selling_band_id: number;
     label: null | string;
     currency: string; // Currency
-    country: null;
-    tax_rate: null;
+    /**
+     * Always null in testing
+     */
+    country: string | null;
+    /**
+     * Always null in testing
+     */
+    tax_rate: number | null;
     options_title: null | string;
     options: Option[] | null;
     origins: Origin[];
@@ -378,16 +408,28 @@ export interface Package {
     album_id: number | null;
     album_title: null | string;
     album_artist: null | string;
-    album_private: null;
+    /**
+     * Always null in testing
+     */
+    album_private: boolean | null;
     album_publish_date: null | string;
     album_release_date: null | string;
     subscriber_only_published: boolean;
-    featured_date: null;
+    /**
+     * Always null in testing
+     */
+    featured_date: string | null;
     certified_seller: number;
     limited_checkout: boolean;
-    associated_license_id: null;
+    /**
+     * Always null in testing
+     */
+    associated_license_id: number | null;
     live_event_scheduled_start_date: null | string;
-    live_event_scheduled_end_date: null;
+    /**
+     * Always null in testing
+     */
+    live_event_scheduled_end_date: string | null;
     live_event_start_date: null | string;
     /**
      * Always null in testing
@@ -422,8 +464,14 @@ export interface Option {
     index: number;
     title: string;
     sku: string;
-    quantity: null;
-    quantity_sold: null;
+    /**
+     * Always null in testing
+     */
+    quantity: number | null;
+    /**
+     * Always null in testing
+     */
+    quantity_sold: number | null;
     quantity_available: number | null;
     origins: Origin[];
 }
@@ -452,11 +500,17 @@ export interface Trackinfo {
     id: number | null;
     track_id: number;
     file: File | null;
-    artist?: null;
+    /**
+     * Always null in testing
+     */
+    artist?: string | null;
     title: string;
     encodings_id?: number;
     license_type: number;
-    private?: null;
+    /**
+     * Always null in testing
+     */
+    private?: boolean | null;
     track_num: number | null;
     album_preorder: boolean;
     unreleased_track: boolean;
@@ -485,12 +539,24 @@ export interface Trackinfo {
     video_id?: number | null;
     video_caption?: null | string;
     video_featured?: number | null;
-    alt_link?: null;
-    encoding_error?: null;
-    encoding_pending?: null;
+    /**
+     * Always null in testing
+     */
+    alt_link?: string | null;
+    /**
+     * Always null in testing
+     */
+    encoding_error?: boolean | null;
+    /**
+     * Always null in testing
+     */
+    encoding_pending?: boolean | null;
     play_count: number | null;
     is_capped: boolean | null;
-    track_license_id?: null;
+    /**
+     * Always null in testing
+     */
+    track_license_id?: number | null;
 }
 
 export interface File {

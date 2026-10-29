@@ -313,13 +313,257 @@ const emptyBandDataParser = ajv.compileParser(emptyBandDataSchema);
 const releasePageDataSchema: JTDSchemaType<BandcampReleasePageData> = {
     discriminator: "item_type",
     mapping: {
-        "album" : {
+        'album': {
             properties: {
-                "for the curious": string,
-                current: {
-                    mapping: {}
+                "for the curious": { type: 'string' },
+                preorder_count: { type: 'uint32', nullable: true },
+                hasAudio: { type: 'boolean' },
+                art_id: { type: 'uint32' },
+                packages: {
+                    elements: {
+                        properties: {
+                            id: { type: 'uint32' },
+                            url: { type: 'string' },
+                            url_for_app: { type: 'string' },
+                            type_id: { type: 'uint32' },
+                            type_name: { type: 'string' },
+                            title: { type: 'string' },
+                            description: { type: 'string' },
+                            desc_pt1: { type: 'string' },
+                            desc_pt2: { type: 'string', nullable: true },
+                            new_desc_format: { type: 'uint32' },
+                            grid_index: { type: 'uint32', nullable: true },
+                            private: { type: 'boolean', nullable: true },
+                            subscriber_only: { type: 'boolean', nullable: true },
+                            price: { type: 'uint32' },
+                            is_set_price: { type: 'uint32', nullable: true },
+                            is_live_ticket: { type: 'uint32', nullable: true },
+                            live_event_over: { type: 'boolean', nullable: true },
+                            live_event_id: { type: 'uint32', nullable: true },
+                            live_event_title: { type: 'string', nullable: true },
+                            live_event_url: { type: 'string', nullable: true },
+                            live_event_gcal_url: { type: 'string', nullable: true },
+                            live_event_ical_url: { type: 'string', nullable: true },
+                            live_event_replays_enabled: { type: 'boolean', nullable: true },
+                            live_event_image_color_one: { type: 'string', nullable: true },
+                            live_event_image_color_two: { type: 'string', nullable: true },
+                            sku: { type: 'string' },
+                            upc: { type: 'string', nullable: true },
+                            band_id: { type: 'uint32' },
+                            selling_band_id: { type: 'uint32' },
+                            label: { type: 'string', nullable: true },
+                            currency: { type: 'string' }, // Currency
+                            country: { type: 'string', nullable: true },
+                            tax_rate: { type: 'uint32', nullable: true },
+                            options_title: { type: 'string', nullable: true },
+                            options: {
+                                elements: {
+                                    properties: {
+                                        id: { type: 'uint32' },
+                                        index: { type: 'uint32' },
+                                        title: { type: 'string' },
+                                        sku: { type: 'string' },
+                                        quantity: { type: 'uint32', nullable: true },
+                                        quantity_sold: { type: 'uint32', nullable: true },
+                                        quantity_available: { type: 'uint32', nullable: true },
+                                        origins: {
+                                            elements: {
+                                                properties: {
+                                                    id: { type: 'uint32' },
+                                                    quantity: { type: 'uint32', nullable: true },
+                                                    quantity_sold: { type: 'uint32', nullable: true },
+                                                    quantity_available: { type: 'uint32', nullable: true },
+                                                    package_id: { type: 'uint32' },
+                                                    option_id: { type: 'uint32' },
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                nullable: true
+                            },
+                            origins: {
+                                elements: {
+                                    properties: {
+                                        id: { type: 'uint32' },
+                                        quantity: { type: 'uint32', nullable: true },
+                                        quantity_sold: { type: 'uint32', nullable: true },
+                                        quantity_available: { type: 'uint32', nullable: true },
+                                        package_id: { type: 'uint32' },
+                                        option_id: { type: 'uint32' },
+                                    }
+                                }
+                            },
+                            arts: {
+                                elements: {
+                                    properties: {
+                                        id: { type: 'uint32' },
+                                        file_name: { type: 'string' },
+                                        index: { type: 'uint32' },
+                                        image_id: { type: 'uint32' },
+                                        width: { type: 'uint32' },
+                                        height: { type: 'uint32' },
+                                        crc: { type: 'uint32' },
+                                    }
+                                }
+                            },
+                            album_art: {
+                                properties: {
+                                    id: { type: 'uint32' },
+                                    url: { type: 'string' },
+                                    https_url: { type: 'string' },
+                                },
+                                nullable: true
+                            },
+                            album_art_id: { type: 'uint32', nullable: true },
+                            shipping_exception_mode: { type: 'string', nullable: true },
+                            download_type: { enum: ["a"], nullable: true },
+                            download_id: { type: 'uint32' },
+                            download_is_preorder: { type: 'uint32', nullable: true },
+                            download_release_date: { type: 'string', nullable: true },
+                            download_title: { type: 'string' },
+                            download_url: { type: 'string', nullable: true },
+                            download_has_audio: { type: 'boolean' },
+                            download_track_count: { type: 'uint32', nullable: true },
+                            download_art_id: { type: 'uint32', nullable: true },
+                            download_artist: { type: 'string', nullable: true },
+                            fulfillment_days: { type: 'uint32', nullable: true },
+                            release_date: { type: 'string', nullable: true },
+                            new_date: { type: 'string' },
+                            edition_size: { type: 'uint32', nullable: true },
+                            quantity_sold: { type: 'uint32', nullable: true },
+                            quantity_available: { type: 'uint32', nullable: true },
+                            quantity_limits: { type: 'uint32', nullable: true },
+                            quantity_warning: { type: 'boolean', nullable: true },
+                            album_id: { type: 'uint32', nullable: true },
+                            album_title: { type: 'string', nullable: true },
+                            album_artist: { type: 'string', nullable: true },
+                            album_private: { type: 'boolean', nullable: true },
+                            album_publish_date: { type: 'string', nullable: true },
+                            album_release_date: { type: 'string', nullable: true },
+                            subscriber_only_published: { type: 'boolean' },
+                            featured_date: { type: 'string', nullable: true },
+                            certified_seller: { type: 'uint32' },
+                            limited_checkout: { type: 'boolean' },
+                            associated_license_id: { type: 'uint32', nullable: true },
+                            live_event_scheduled_start_date: { type: 'string', nullable: true },
+                            live_event_scheduled_end_date: { type: 'string', nullable: true },
+                            live_event_start_date: { type: 'string', nullable: true },
+                            live_event_end_date: { type: 'string', nullable: true },
+                            live_event_timezone: { type: 'uint32', nullable: true },
+                            live_event_type: { type: 'string', nullable: true },
+                            listening_party_duration: { type: 'uint32', nullable: true },
+                            is_cardable: { type: 'boolean' }
+                        }
+                    },
+                    nullable: true
                 },
-                
+                defaultPrice: { type: 'uint32' },
+                freeDownloadPage: { type: 'string', nullable: true },
+                FREE: { type: 'uint32' },
+                PAID: { type: 'uint32' },
+                artist: { type: 'string' },
+                id: { type: 'uint32' },
+                last_subscription_item: {} as never,
+                has_discounts: { type: 'boolean' },
+                is_bonus: { type: 'boolean', nullable: true },
+                play_cap_data: {
+                    properties: {
+                        streaming_limits_enabled: { type: 'boolean' };
+                        streaming_limit: { type: 'number' }
+                    },
+                    nullable: true
+                },
+                is_purchased: { type: 'boolean' },
+                items_purchased: {
+                    properties: {
+                        packages: {
+                            properties: {}
+                        },
+                        bundles: {
+                            properties: {}
+                        },
+                        crowdfunding_campaign: {
+                            properties: {}
+                        }
+                    }
+                },
+                is_private_stream: { type: 'boolean', nullable: true },
+                is_band_member: { type: 'boolean', nullable: true },
+                licensed_version_ids: {
+                    elements: {
+                        type: 'uint32'
+                    },
+                    nullable: true
+                },
+                package_associated_license_id: { type: 'uint32', nullable: true },
+                has_video: { type: 'boolean', nullable: true },
+                tralbum_subscriber_only: { type: 'boolean' },
+                album_is_preorder: { type: 'boolean' },
+                album_release_date: { type: 'string' },
+                playing_from: { enum: ["album page"] },
+                url: { type: 'string' },
+                trackinfo: {
+                    elements: {
+                        properties: {
+                            id: { type: 'uint32', nullable: true },
+                            track_id: { type: 'uint32' },
+                            file: {
+                                properties: {
+                                    "mp3-128": { type: 'string' }
+                                },
+                                optionalProperties: {
+                                    "mp3-v0": { type: 'string' }
+                                },
+                                nullable: true
+                            },
+                            title: { type: 'string' },
+                            license_type: { type: 'uint32' },
+                            track_num: { type: 'uint32', nullable: true },
+                            album_preorder: { type: 'boolean' },
+                            unreleased_track: { type: 'boolean' },
+                            title_link: { type: 'string', nullable: true },
+                            has_lyrics: { type: 'boolean', nullable: true },
+                            has_info: { type: 'boolean' },
+                            streaming: { type: 'uint32', nullable: true },
+                            is_downloadable: {} as never,
+                            has_free_download: { type: 'boolean', nullable: true },
+                            duration: { type: 'uint32' },
+                            lyrics: { type: 'string', nullable: true },
+                            sizeof_lyrics: { type: 'uint32' },
+                            is_draft: { type: 'boolean' },
+                            play_count: { type: 'uint32', nullable: true },
+                            is_capped: { type: 'boolean', nullable: true },
+                        },
+                        optionalProperties: {
+                            artist: { type: 'string', nullable: true },
+                            encodings_id: { type: 'uint32' },
+                            private: { type: 'boolean', nullable: true },
+                            free_album_download: { type: 'boolean' },
+                            video_source_type: { type: 'string', nullable: true },
+                            video_source_id: { type: 'string', nullable: true },
+                            video_mobile_url: { type: 'string', nullable: true },
+                            video_poster_url: { type: 'string', nullable: true },
+                            video_id: { type: 'uint32', nullable: true },
+                            video_caption: { type: 'string', nullable: true },
+                            video_featured: { type: 'uint32', nullable: true },
+                            alt_link: { type: 'string', nullable: true },
+                            encoding_error: { type: 'boolean', nullable: true },
+                            encoding_pending: { type: 'boolean', nullable: true },
+                            track_license_id: { type: 'uint32', nullable: true }
+                        }
+                    }
+                },
+                current: {
+                    properties: {
+                        audit: {type: 'uint32'}
+                    }
+                }
+            }
+        },
+        'track': {
+            properties: {
+
             }
         }
     }
