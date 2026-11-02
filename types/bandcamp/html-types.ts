@@ -222,12 +222,12 @@ export interface ReleasePageDataRoot {
     /**
      * Always null in testing
      */
-    last_subscription_item: null;
+    last_subscription_item: {} | null;
     has_discounts: boolean;
     is_bonus: boolean | null;
     play_cap_data: PlayCapData | null;
-    is_purchased: boolean;
-    items_purchased: ItemsPurchased;
+    is_purchased: boolean | null;
+    items_purchased: ItemsPurchased | null;
     /**
      * Always null in testing
      */
@@ -245,15 +245,19 @@ export interface ReleasePageDataRoot {
     tralbum_subscriber_only: boolean;
     album_is_preorder: boolean;
     album_release_date: string;
-    playing_from: string;
+    playing_from: "album page" | "track page";
     url: string;
     trackinfo: Trackinfo[];
+    current: CurrentAlbum | CurrentTrack
 }
 
 export interface AlbumReleasePageData extends ReleasePageDataRoot {
     item_type: "album";
     featured_track_id: number;
-    initial_track_num: null;
+    /**
+     * Always null in testing
+     */
+    initial_track_num: number | null;
     is_preorder: boolean;
     playing_from: "album page";
     use_expando_lyrics: boolean;
@@ -274,8 +278,14 @@ export interface CurrentRoot {
     new_date: string;
     mod_date: string;
     publish_date: string;
-    private: null;
-    killed: null;
+    /**
+     * Always null in testing
+     */
+    private: boolean | null;
+    /**
+     * Always null in testing
+     */
+    killed: boolean | null;
     download_pref: number | null;
     require_email: number | null;
     is_set_price: number | null;
@@ -286,7 +296,10 @@ export interface CurrentRoot {
     artist: null | string;
     about: null | string;
     credits: null | string;
-    auto_repriced: null;
+    /**
+     * Always null in testing
+     */
+    auto_repriced: boolean | null;
     new_desc_format: number;
     band_id: number;
     selling_band_id: number;
@@ -300,15 +313,24 @@ export interface CurrentRoot {
 export interface CurrentAlbum extends CurrentRoot {
     type: "album"
     upc: null | string;
-    purchase_url: null;
-    purchase_title: null;
+    /**
+     * Always null in testing
+     */
+    purchase_url: string | null;
+    /**
+     * Always null in testing
+     */
+    purchase_title: string | null;
     featured_track_id: number;
 }
 
 export interface CurrentTrack extends CurrentRoot {
     type: "track"
     track_number: number | null;
-    file_name: null;
+    /**
+     * Always null in testing
+     */
+    file_name: string | null;
     lyrics: null | string;
     album_id: number | null;
     encodings_id: number;

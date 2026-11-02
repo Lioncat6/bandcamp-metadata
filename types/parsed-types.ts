@@ -1,4 +1,4 @@
-import type { bandClientItems, bandData, labelArtistsSelectorPanelData, searchItemDisplayType } from "./bandcamp/html-types.js"
+import type { BandcampReleasePageData, bandClientItems, bandData, labelArtistsSelectorPanelData, searchItemDisplayType } from "./bandcamp/html-types.js"
 
 // Contains typing of data formatted on our side; After parsing, so should be "clean" data
 export interface BandcampSearchResults {
@@ -160,13 +160,44 @@ export interface BandcampShow {
 
 export interface BandcampReleasePageRoot {
     name: string
+    url: string
     id: number
     image: BandcampImage
     artist: string
     releaseDate: string
-    publishDate: string
-    modifyDate: string
+    credits: string | null
     raw: {
-        tralbum: null
+        tralbum: BandcampReleasePageData
     }
 }
+
+export interface BandcampAlbumTrack {
+    lyrics: string | null
+    trackNumber: number | null
+    duration: number
+    name: string
+    url: string | null
+    id: number | null
+}
+
+export interface BandcampReleaseAlbumPage extends BandcampReleasePageRoot {
+    upc: string | null
+    trackCount: number
+    tracks: BandcampAlbumTrack[]
+}
+
+export interface BandcampTrackAlbum {
+    url: string
+    id: number
+    name: string
+}
+
+type TrackBase = BandcampAlbumTrack & BandcampReleasePageRoot
+
+export interface BandcampReleaseTrackPage extends TrackBase {
+    isrc: string | null
+    album: BandcampTrackAlbum | null
+}
+
+
+export type BandcampReleasePage =BandcampReleasePageRoot;

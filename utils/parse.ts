@@ -1,7 +1,7 @@
 import { Document, Element, NodeWithChildren, type ChildNode } from "domhandler"
 import * as CSSselect from "css-select";
 import * as he from 'he';
-import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease, BandcampMiniArtist, BandcampArtistPage, BandcampShow } from "../types/parsed-types.js";
+import type { BandcampSearchResult, BandcampSearchResults, ArtistSearchResult, AlbumSearchResult, TrackSearchResult, LabelSearchResult, FanSearchResult, BandcampBandPage, BandcampMiniRelease, BandcampMiniArtist, BandcampArtistPage, BandcampShow, BandcampReleasePage, BandcampReleasePageRoot, BandcampReleaseAlbumPage, BandcampAlbumTrack, BandcampReleaseTrackPage, BandcampTrackAlbum } from "../types/parsed-types.js";
 import validate from "./schema.js";
 import strings from "./strings.js";
 import image from "./image.js";
@@ -320,9 +320,81 @@ function bandHTMLParser(html: Document): BandcampBandPage {
     }
 }
 
+
+function releaseHTMLParser(html: Document): BandcampReleasePage {
+    const dataScript = expectOne('script[data-tralbum]', html);
+    console.log(getAttr(dataScript, 'data-tralbum'))
+    const tralbumData = expectJSON(validate.releasePageData(he.decode(getAttr(dataScript, 'data-tralbum'))));
+    const albumTitle = innerTextOpt(selectOne('.fromAlbum', html))?.trim()
+    const releasePage: BandcampReleasePageRoot = {
+        name: tralbumData.current.title,
+        id: tralbumData.id,
+        image: image.getImage({ idOrUrl: tralbumData.art_id, isId: true, a: true }),
+        artist: tralbumData.artist,
+        releaseDate: tralbumData.album_release_date,
+        url: tralbumData.url,
+        credits: tralbumData.current.credits,
+        raw: {
+            tralbum: tralbumData
+        }
+    }
+    if (tralbumData.item_type == "album") {
+        const baseURL = new URL(releasePage.url);
+        let tracks: BandcampAlbumTrack[] = [];
+        tralbumData.trackinfo.forEach(track => {
+            let url = null;
+            if (track.title_link) {
+                baseURL.pathname = track.title_link;
+                url = baseURL.toString();
+            }
+            tracks.push(
+                {
+                    name: track.title,
+                    url: url,
+                    lyrics: track.lyrics,
+                    duration: track.duration,
+                    trackNumber: track.track_num,
+                    id: track.id
+                }
+            )
+        })
+        const albumPage: BandcampReleaseAlbumPage = {
+            ...releasePage,
+            upc: tralbumData.current.upc,
+            /**
+             * This does NOT include hidden / 'bonus' tracks on the release.
+             * Use the search endpoint to get the full track count
+             */
+            trackCount: tralbumData.trackinfo.length,
+            tracks
+        }
+        return albumPage;
+    } else {
+        const track = expectValue(tralbumData.trackinfo[0], 'Track page trackinfo');
+        let album: BandcampTrackAlbum | null = null;
+        if (albumTitle && tralbumData.current.album_id && tralbumData.album_url) {
+            album = {
+                url: tralbumData.album_url,
+                id: tralbumData.current.album_id,
+                name: albumTitle
+            }
+        }
+        const trackPage: BandcampReleaseTrackPage = {
+            ...releasePage,
+            isrc: tralbumData.current.isrc,
+            lyrics: tralbumData.current.lyrics ?? track.lyrics,
+            trackNumber: tralbumData.current.track_number ?? track.track_num,
+            duration: track.duration,
+            album
+        }
+        return trackPage;
+    }
+}
+
 const parse = {
     searchHTML: searchHTMLParser,
-    bandHTML: bandHTMLParser
+    bandHTML: bandHTMLParser,
+    releaseHTML: releaseHTMLParser
 }
 
 export default parse;

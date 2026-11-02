@@ -1,5 +1,5 @@
 import { parseDocument, DomUtils } from "htmlparser2";
-import type { BandcampBandPage, BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
+import type { BandcampBandPage, BandcampReleasePage, BandcampSearchResult, BandcampSearchResults } from "./types/parsed-types.js";
 import validate from "./utils/schema.js";
 import strings from "./utils/strings.js";
 import parse from "./utils/parse.js";
@@ -68,6 +68,7 @@ export class Bandcamp {
         })
         if (response.ok) {
             const rawHTML = await response.text();
+            console.log(rawHTML)
             return parseDocument(rawHTML);
         } else if (response.status == 404) {
             return null;
