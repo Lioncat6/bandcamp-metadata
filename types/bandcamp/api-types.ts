@@ -3,6 +3,14 @@
 
 import type { BandcampReleaseType, BandcampReleaseTypeFull } from "./html-types.js";
 
+// API response error
+export interface BandcampAPIError {
+    /**
+     * Always true
+     */
+    error: boolean
+    error_message: string
+}
 
 // tralbum details
 // https://bandcamp.com/api/mobile/26/tralbum_details

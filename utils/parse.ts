@@ -6,7 +6,7 @@ import validate from "./schema.js";
 import strings from "./strings.js";
 import image from "./image.js";
 import { DomUtils } from "htmlparser2";
-import type { BandPageApiResponse, TralbumApiResponse } from "../types/bandcamp/api-types.js";
+import type { BandcampAPIError, BandPageApiResponse, TralbumApiResponse } from "../types/bandcamp/api-types.js";
 
 function getAttr(element: Element, attr: string): string {
     const attribute = element.attribs[attr];
@@ -400,12 +400,17 @@ function bandPageJSONParser(json: string): BandPageApiResponse {
     return expectJSON(validate.bandPageApiResponse(json))
 }
 
+function apiErrorJSONParser(json: string): BandcampAPIError | undefined {
+    return validate.errorApiResponse(json, false);
+}
+
 const parse = {
     searchHTML: searchHTMLParser,
     bandHTML: bandHTMLParser,
     releaseHTML: releaseHTMLParser,
     tralbumJSON: tralbumJSONParser,
-    bandPageJSON: bandPageJSONParser
+    bandPageJSON: bandPageJSONParser,
+    errorJSON: apiErrorJSONParser
 }
 
 export default parse;

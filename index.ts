@@ -90,7 +90,7 @@ class API {
 
     }
     async getBand(id: number | string) {
-        const urlObj = new URL(`https://bandcamp.com/api/mobile/26/tralbum_details`);
+        const urlObj = new URL(`https://bandcamp.com/api/mobile/26/band_details`);
         urlObj.searchParams.append('band_id', String(id));
         const response = await this.bcFetch(urlObj.toString(), 'GET', false);
         if (!response) return null;
@@ -124,6 +124,10 @@ class API {
         })
         if (response.ok) {
             const textReponse = await response.text();
+            const apiError = parse.errorJSON(textReponse);
+            if (apiError) {
+                throw new Error(`Recieved error from Bandcamp: ${apiError.error_message}`);
+            }
             return textReponse;
         } else if (response.status == 404) {
             return null;

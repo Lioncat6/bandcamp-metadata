@@ -4,7 +4,7 @@ import type { BandcampSearchResult } from "../types/parsed-types.js"
 import strings from "./strings.js"
 import type { AlbumReleasePageData, BandcampReleasePageData, bandClientItems, bandData, CurrentAlbum, CurrentRoot, CurrentTrack, emptyBandData, labelArtistsSelectorPanelData, Package, ReleasePageDataRoot, searchData, searchItemDisplayType, searchItemType, Trackinfo, TrackReleasePageData } from "../types/bandcamp/html-types.js"
 import { trace } from "console"
-import type { BandPageApiResponse, BandPageArtist, BandPageDiscography, BandPageMerch, BandPageMerchArt, BandPageNavbarTitles, BandPageShow, BandPageSite, TralbumApiResponse, TralbumBand, TralbumGeoname, TralbumPackageDetailsLite, TralbumStreamingurl, TralbumTag, TralbumTrack } from "../types/bandcamp/api-types.js"
+import type { BandcampAPIError, BandPageApiResponse, BandPageArtist, BandPageDiscography, BandPageMerch, BandPageMerchArt, BandPageNavbarTitles, BandPageShow, BandPageSite, TralbumApiResponse, TralbumBand, TralbumGeoname, TralbumPackageDetailsLite, TralbumStreamingurl, TralbumTag, TralbumTrack } from "../types/bandcamp/api-types.js"
 const ajv = new Ajv.Ajv({
     int32range: false
 })
@@ -898,6 +898,15 @@ const bandPageApiResponseSchema: JTDSchemaType<BandPageApiResponse> = {
 
 const bandPageApiResponseParser = ajv.compileParser<BandPageApiResponse>(bandPageApiResponseSchema);
 
+const errorApiResponseSchema: JTDSchemaType<BandcampAPIError> = {
+    properties: {
+        error: {type: 'boolean'},
+        error_message: {type: 'string'}
+    }
+}
+
+const errorApiResponseParser = ajv.compileParser<BandcampAPIError>(errorApiResponseSchema)
+
 type validationTypes = string;
 
 function validateJSON<T>(json: validationTypes, expect = true, parser: JTDParser<T>): T | undefined {
@@ -918,7 +927,8 @@ const validate = {
     emptyBandData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, emptyBandDataParser),
     releasePageData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, releasePageDataParser),
     tralbumApiResponse: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, tralbumApiResponseParser),
-    bandPageApiResponse: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, bandPageApiResponseParser)
+    bandPageApiResponse: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, bandPageApiResponseParser),
+    errorApiResponse: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, errorApiResponseParser),
 }
 
 export default validate;
