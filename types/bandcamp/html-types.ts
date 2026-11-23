@@ -20,7 +20,11 @@ type trackType = "t"
  */
 type fanType = "f"
 
-export type searchItemDisplayType = "label" | "artist" | "album" | "track" | "fan"
+export type BandcampReleaseType =  albumType | trackType
+export type BandcampReleaseTypeFull = "album" | "track";
+
+export type searchItemDisplayType = BandcampReleaseTypeFull | "label" | "artist" | "fan"
+
 
 export interface searchData {
     type: searchItemType
@@ -201,10 +205,8 @@ export interface labelArtistsSelectorPanelData {
  * found with script[data-tralbum]
  */
 
-type releasePageTypes = "album" | "track";
-
 export interface ReleasePageDataRoot {
-    item_type: releasePageTypes;
+    item_type: BandcampReleaseTypeFull;
     "for the curious": string;
     /**
      * Always null in testing
@@ -307,7 +309,7 @@ export interface CurrentRoot {
     download_desc_id: number | null;
     release_date: string;
     id: number;
-    type: releasePageTypes;
+    type: BandcampReleaseTypeFull;
 }
 
 export interface CurrentAlbum extends CurrentRoot {

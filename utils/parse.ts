@@ -6,6 +6,7 @@ import validate from "./schema.js";
 import strings from "./strings.js";
 import image from "./image.js";
 import { DomUtils } from "htmlparser2";
+import type { BandPageApiResponse, TralbumApiResponse } from "../types/bandcamp/api-types.js";
 
 function getAttr(element: Element, attr: string): string {
     const attribute = element.attribs[attr];
@@ -391,10 +392,20 @@ function releaseHTMLParser(html: Document): BandcampReleasePage {
     }
 }
 
+function tralbumJSONParser(json: string): TralbumApiResponse {
+    return expectJSON(validate.tralbumApiResponse(json))
+}
+
+function bandPageJSONParser(json: string): BandPageApiResponse {
+    return expectJSON(validate.bandPageApiResponse(json))
+}
+
 const parse = {
     searchHTML: searchHTMLParser,
     bandHTML: bandHTMLParser,
-    releaseHTML: releaseHTMLParser
+    releaseHTML: releaseHTMLParser,
+    tralbumJSON: tralbumJSONParser,
+    bandPageJSON: bandPageJSONParser
 }
 
 export default parse;

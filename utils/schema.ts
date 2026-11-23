@@ -4,6 +4,7 @@ import type { BandcampSearchResult } from "../types/parsed-types.js"
 import strings from "./strings.js"
 import type { AlbumReleasePageData, BandcampReleasePageData, bandClientItems, bandData, CurrentAlbum, CurrentRoot, CurrentTrack, emptyBandData, labelArtistsSelectorPanelData, Package, ReleasePageDataRoot, searchData, searchItemDisplayType, searchItemType, Trackinfo, TrackReleasePageData } from "../types/bandcamp/html-types.js"
 import { trace } from "console"
+import type { BandPageApiResponse, BandPageArtist, BandPageDiscography, BandPageMerch, BandPageMerchArt, BandPageNavbarTitles, BandPageShow, BandPageSite, TralbumApiResponse, TralbumBand, TralbumGeoname, TralbumPackageDetailsLite, TralbumStreamingurl, TralbumTag, TralbumTrack } from "../types/bandcamp/api-types.js"
 const ajv = new Ajv.Ajv({
     int32range: false
 })
@@ -599,7 +600,7 @@ const releasePageDataRootSchema: JTDSchemaType<ReleasePageDataRoot> = {
             },
             nullable: true
         },
-        is_purchased: { type: 'boolean', nullable: true},
+        is_purchased: { type: 'boolean', nullable: true },
         items_purchased: {
             properties: {
                 packages: {} as never,
@@ -660,7 +661,244 @@ const releasePageDataSchema: JTDSchemaType<BandcampReleasePageData> = {
 
 const releasePageDataParser = ajv.compileParser<BandcampReleasePageData>(releasePageDataSchema);
 
-type validationTypes = string
+const tralbumApiResponseBandSchema: JTDSchemaType<TralbumBand> = {
+    properties: {
+        band_id: { type: "uint32" },
+        name: { type: "string" },
+        image_id: { type: "uint32" },
+        bio: { type: "string", nullable: true },
+        location: { type: "string", nullable: true }
+    }
+}
+
+const tralbumApiResponseStreamingurlSchema: JTDSchemaType<TralbumStreamingurl> = {
+    properties: {
+        "mp3-128": { type: 'string' }
+    }
+}
+
+const tralbumAPIResponseTrackSchema: JTDSchemaType<TralbumTrack> = {
+    properties: {
+        track_id: { type: "uint32" },
+        // Always null in testing
+        track_license_id: { type: "uint32", nullable: true },
+        title: { type: "string" },
+        track_num: { type: "uint32", nullable: true },
+        streaming_url: tralbumApiResponseStreamingurlSchema,
+        duration: { type: "float32" },
+        encodings_id: { type: "uint32" },
+        // Always null in testing
+        album_title: { type: "string", nullable: true },
+        band_name: { type: "string" },
+        art_id: { type: "uint32", nullable: true },
+        album_id: { type: "uint32", nullable: true },
+        is_streamable: { type: "boolean" },
+        has_lyrics: { type: "boolean" },
+        is_set_price: { type: "boolean" },
+        price: { type: "float32" },
+        has_digital_download: { type: "boolean" },
+        // Always null in testing
+        merch_ids: { type: "uint32", nullable: true },
+        // Always null in testing
+        merch_sold_out: { type: "boolean", nullable: true },
+        currency: { type: "string" },
+        require_email: { type: "boolean" },
+        is_purchasable: { type: "boolean" },
+        band_id: { type: "uint32" },
+        label: { type: "string", nullable: true },
+        label_id: { type: "uint32", nullable: true },
+        track_url: { type: "string", nullable: true }
+    }
+}
+
+const tralbumApiResponseGeonameSchema: JTDSchemaType<TralbumGeoname> = {
+    properties: {
+        id: { type: "uint32" },
+        name: { type: "string" },
+        fullname: { type: "string" }
+    }
+}
+
+const tralbumApiResponseTagSchema: JTDSchemaType<TralbumTag> = {
+    properties: {
+        name: { type: "string" },
+        norm_name: { type: "string" },
+        url: { type: "string" },
+        isloc: { type: "boolean" },
+        loc_id: { type: "uint32", nullable: true },
+        geoname: { ...tralbumApiResponseGeonameSchema, nullable: true }
+    }
+}
+
+const tralbumApiResponsePackageDetailsLiteSchema: JTDSchemaType<TralbumPackageDetailsLite> = {
+    properties: {
+        title: { type: 'string' },
+        image_ids: { elements: { type: 'uint32' } }
+    }
+}
+
+const tralbumApiResponseSchema: JTDSchemaType<TralbumApiResponse> = {
+    properties: {
+        id: { type: "uint32" },
+        type: { enum: ["t", "a"] },
+        title: { type: "string" },
+        bandcamp_url: string,
+        art_id: number,
+        band: tralbumApiResponseBandSchema,
+        tralbum_artist: string,
+        package_art: { elements: { type: 'uint32' } },
+        featured_track_id: number,
+        tracks: { elements: tralbumAPIResponseTrackSchema },
+        credits: { type: 'string', nullable: true },
+        about: { type: 'string', nullable: true },
+        album_id: { type: 'uint32', nullable: true },
+        album_title: { type: 'string', nullable: true },
+        release_date: { type: 'uint32' },
+        is_purchasable: { type: 'boolean' },
+        is_preorder: { type: 'boolean' },
+        tags: { elements: tralbumApiResponseTagSchema },
+        streaming_limit: { type: 'uint32' }
+    },
+    optionalProperties: {
+        free_download: { type: 'boolean' },
+        currency: { type: 'string' },
+        is_set_price: { type: 'boolean' },
+        price: { type: 'float32' },
+        require_email: { type: 'boolean' },
+        label: { type: 'string', nullable: true },
+        label_id: { type: 'uint32', nullable: true },
+        package_details_lite: { values: tralbumApiResponsePackageDetailsLiteSchema } as never,
+        has_digital_download: { type: 'boolean' },
+        num_downloadable_tracks: { type: 'uint32' },
+        merch_sold_out: { type: 'boolean', nullable: true },
+    }
+}
+
+const tralbumApiResponseParser = ajv.compileParser<TralbumApiResponse>(tralbumApiResponseSchema);
+
+const bandPageSiteSchema: JTDSchemaType<BandPageSite> = {
+    properties: {
+        url: { type: 'string' },
+        title: { type: 'string' }
+    }
+}
+
+const bandPageDiscographySchema: JTDSchemaType<BandPageDiscography> = {
+    properties: {
+        item_id: { type: 'uint32' },
+        item_type: { enum: ['album', 'track'] },
+        artist_name: { type: 'string', nullable: true },
+        band_name: { type: 'string' },
+        title: { type: 'string' },
+        art_id: { type: 'uint32' },
+        release_date: { type: 'string' },
+        is_purchasable: { type: 'boolean' },
+        band_id: { type: 'uint32' },
+    }
+}
+
+const bandPageShowSchema: JTDSchemaType<BandPageShow> = {
+    properties:
+    {
+        loc: { type: 'string' },
+        date: { type: 'string' },
+        uri: { type: 'string' },
+        venue: { type: 'string' },
+        utc_date: { type: 'uint32' },
+        event_date: { type: 'string' },
+    }
+}
+
+const bandPageNavbarTitlesSchema: JTDSchemaType<BandPageNavbarTitles> = {
+    properties: {
+        m: { type: 'string' },
+        p: { type: 'string' },
+        l: { type: 'string' },
+        a: { type: 'string' },
+        v: { type: 'string' },
+        u: { type: 'string' },
+        s: { type: 'string' },
+        c: { type: 'string' },
+    }
+}
+
+const bandPageMerchArtSchema: JTDSchemaType<BandPageMerchArt> = {
+    properties: {
+        id: { type: 'uint32' },
+        file_name: { type: 'string' },
+        index: { type: 'uint32' },
+        image_id: { type: 'uint32' },
+        width: { type: 'uint32' },
+        height: { type: 'uint32' },
+        crc: { type: 'uint32' },
+    }
+}
+
+
+const bandPageMerchSchema: JTDSchemaType<BandPageMerch> = {
+    properties: {
+        id: { type: 'uint32' },
+        type_id: { type: 'uint32' },
+        /**
+         * Known Types (Non-exhastive):
+         * "Vinyl LP" | "2 x Vinyl LP" | "Compact Disc (CD)" | "Vinyl Box Set" | "Other Vinyl" | "Bag" | "Hat" | "T-Shirt/Shirt" | "Other" | "T-Shirt/Apparel" | "Poster/Print"
+         */
+        type_name: { type: 'string' },
+        title: { type: 'string' },
+        grid_index: { type: 'uint32' },
+        subscriber_only: { type: 'boolean', nullable: true },
+        arts: { elements: bandPageMerchArtSchema },
+        album_art: { type: 'string', nullable: true },
+        download_type: { enum: ["a", "t"], nullable: true },
+        download_id: { type: 'uint32' },
+        download_title: { type: 'string', nullable: true },
+        download_has_audio: { type: 'boolean' },
+        band_id: { type: 'uint32' },
+        artist_name: { type: 'string', nullable: true },
+        in_stock: { type: 'boolean' },
+        is_live_ticket: { type: 'boolean' }
+    }
+}
+
+const bandPageArtistSchema: JTDSchemaType<BandPageArtist> = {
+    properties: {
+        id: { type: 'uint32' },
+        name: { type: 'string' },
+        image_id: { type: 'uint32' },
+        featured_date: { type: 'uint32' },
+        location: { type: 'string' },
+    }
+}
+
+const bandPageApiResponseSchema: JTDSchemaType<BandPageApiResponse> = {
+    properties: {
+        id: { type: "uint32" },
+        name: { type: "string" },
+        bio_image_id: { type: "uint32" },
+        bio_image_width: { type: "uint32" },
+        bio_image_height: { type: "uint32" },
+        bio: { type: "string" },
+        bandcamp_url: { type: "string" },
+        sites: { elements: bandPageSiteSchema },
+        discography: { elements: bandPageDiscographySchema },
+        location: { type: "string" },
+        /**
+         * Always null in testing
+         */
+        header_image_id: { type: "uint32", nullable: true },
+        shows: { elements: bandPageShowSchema },
+        navbar_titles: bandPageNavbarTitlesSchema,
+        merch: { elements: bandPageMerchSchema },
+        /**
+         * Only has artists on label pages
+         */
+        artists: { elements: bandPageArtistSchema }
+    }
+}
+
+const bandPageApiResponseParser = ajv.compileParser<BandPageApiResponse>(bandPageApiResponseSchema);
+
+type validationTypes = string;
 
 function validateJSON<T>(json: validationTypes, expect = true, parser: JTDParser<T>): T | undefined {
     const data = parser(json);
@@ -678,7 +916,9 @@ const validate = {
     clientItems: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, clientItemsParser),
     artistsSelectorPanel: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, labelArtistsSelectorPanelParser),
     emptyBandData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, emptyBandDataParser),
-    releasePageData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, releasePageDataParser)
+    releasePageData: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, releasePageDataParser),
+    tralbumApiResponse: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, tralbumApiResponseParser),
+    bandPageApiResponse: (json: validationTypes, expect?: boolean) => validateJSON(json, expect, bandPageApiResponseParser)
 }
 
 export default validate;

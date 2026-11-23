@@ -200,4 +200,4 @@ export interface BandcampReleaseTrackPage extends TrackBase {
 }
 
 
-export type BandcampReleasePage =BandcampReleasePageRoot;
+export type BandcampReleasePage = BandcampReleaseAlbumPage | BandcampReleaseTrackPage;

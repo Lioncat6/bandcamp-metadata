@@ -4,20 +4,18 @@ import validate from "./utils/schema.js";
 import strings from "./utils/strings.js";
 import parse from "./utils/parse.js";
 import type { BandcampConfig } from "./types/global-types.js";
-import type { searchItemType } from "./types/bandcamp/html-types.js";
+import type { BandcampReleaseType, searchItemType } from "./types/bandcamp/html-types.js";
 
 
 export class Bandcamp {
-    cookie: string;
-    userAgent: string;
+    config: BandcampConfig
     strict: boolean;
     /**
      * Bandcamp API methods
      */
     api: API;
     constructor(config: BandcampConfig) {
-        this.cookie = config.cookie;
-        this.userAgent = config.userAgent;
+        this.config = config;
         this.api = new API(config)
         this.strict = true;
     }
@@ -51,16 +49,22 @@ export class Bandcamp {
     }
     async getRelease(url: string): Promise<BandcampReleasePage> {
         let urlObj = new URL(url);
-        const html = await this.htmlFetch(urlObj.toString());
+        const html = await this.htmlFetch(urlObj.toString(), 'GET', false);
         if (!html) throw new Error(strings.errors.htmlParsingFailed.generic);
         return parse.releaseHTML(html);
     }
-    private async htmlFetch(url: string, method: string = "GET", body?: BodyInit) {
+
+    private async htmlFetch(url: string, method: string = "GET", useCookie = true, body?: BodyInit) {
         let options: RequestInit = {
             method: method,
             headers: {
-                'Cookie': this.cookie,
-                'User-Agent': this.userAgent
+                'User-Agent': this.config.userAgent
+            }
+        }
+        if (useCookie) {
+            options.headers = {
+                'Cookie': this.config.cookie,
+                'User-Agent': this.config.userAgent
             }
         }
         const response = await fetch(url, options).catch((error) => {
@@ -68,7 +72,6 @@ export class Bandcamp {
         })
         if (response.ok) {
             const rawHTML = await response.text();
-            console.log(rawHTML)
             return parseDocument(rawHTML);
         } else if (response.status == 404) {
             return null;
@@ -76,21 +79,58 @@ export class Bandcamp {
             throw new Error(`Fetch failed with status: ${response.status}`)
         }
     }
+
 }
 class API {
-    cookie: string;
-    userAgent: string;
+    config: BandcampConfig
     constructor(config: BandcampConfig) {
-        this.cookie = config.cookie;
-        this.userAgent = config.userAgent;
+        this.config = config;
     }
     async search() {
 
     }
-    async getBand() {
-
+    async getBand(id: number | string) {
+        const urlObj = new URL(`https://bandcamp.com/api/mobile/26/tralbum_details`);
+        urlObj.searchParams.append('band_id', String(id));
+        const response = await this.bcFetch(urlObj.toString(), 'GET', false);
+        if (!response) return null;
+        return parse.bandPageJSON(response);
     }
-    async getAlbum() {
+    async getRelease(id: number | string, type: BandcampReleaseType) {
+        const urlObj = new URL(`https://bandcamp.com/api/mobile/26/tralbum_details`);
+        urlObj.searchParams.append('band_id', '1'); // Requested band ID doesn't actually matter
+        urlObj.searchParams.append('tralbum_type', type);
+        urlObj.searchParams.append('tralbum_id', String(id));
+        const response = await this.bcFetch(urlObj.toString(), 'GET', false);
+        if (!response) return null;
+        return parse.tralbumJSON(response);
+    }
 
+    private async bcFetch(url: string, method = "GET", useCookie = true, body?: BodyInit) {
+        let options: RequestInit = {
+            method: method,
+            headers: {
+                'User-Agent': this.config.userAgent
+            }
+        }
+        if (useCookie) {
+            options.headers = {
+                'Cookie': this.config.cookie,
+                'User-Agent': this.config.userAgent
+            }
+        }
+        const response = await fetch(url, options).catch((error) => {
+            throw new Error(`Fetch failed: ${error}`)
+        })
+        if (response.ok) {
+            const textReponse = await response.text();
+            return textReponse;
+        } else if (response.status == 404) {
+            return null;
+        } else {
+            throw new Error(`Fetch failed with status: ${response.status}`)
+        }
     }
 }
+
+

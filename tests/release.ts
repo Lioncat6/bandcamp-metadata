@@ -2,7 +2,7 @@ import { Bandcamp } from "../index.js";
 import fs from "fs"
 let bcApi = new Bandcamp({
     cookie: 'client_id=bandcamp-metadata-test-client',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0'
+    userAgent: 'Firefox/ (Test client) https://github.com/Lioncat6/bandcamp-metadata'
 })
 
 const results = await bcApi.getRelease('https://jamiepaige.bandcamp.com/album/constant-companions-deluxe-edition')
